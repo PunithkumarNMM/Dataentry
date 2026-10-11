@@ -24,6 +24,8 @@ with st.form("permit_form"):
         lease_no = st.text_input("Lease No", "BLRNSWP54")
         barcode = st.text_input("Barcode", "MYZ117332769")
         lease_name = st.text_input("Lease Name", "Sobhamma S")
+        
+        # Fixed GST No input field added back
         gst_no = st.text_input("DSC No / Name / GST No", "/")
         
         type_of_land = select_with_other("Type of Land", ["Revenue", "Patta Land", "Forest"], "Revenue")
@@ -50,35 +52,35 @@ with st.form("permit_form"):
         st.subheader("Validity Period & 12-Hour Time Selection")
         v_start_date = st.date_input("Start Date", datetime.date(2026, 10, 10), min_value=datetime.date(2000, 1, 1))
         
-        # Custom 12-hr Start Time Selector
         st.markdown("**Start Time (12-hour)**")
         st_h, st_m, st_ap = st.columns(3)
         with st_h:
-            start_hour = st.selectbox("Hour", list(range(1, 13)), index=5)  # Default 6
+            start_hour = st.selectbox("Hour", list(range(1, 13)), index=5)
         with st_m:
-            start_min = st.selectbox("Minute", [f"{i:02d}" for i in range(60)], index=10)  # Default 10
+            start_min = st.selectbox("Minute", [f"{i:02d}" for i in range(60)], index=10)
         with st_ap:
             start_ampm = st.selectbox("AM/PM", ["AM", "PM"], index=0)
 
         v_end_date = st.date_input("End Date", datetime.date(2026, 10, 10), min_value=datetime.date(2000, 1, 1))
         
-        # Custom 12-hr End Time Selector
         st.markdown("**End Time (12-hour)**")
         en_h, en_m, en_ap = st.columns(3)
         with en_h:
-            end_hour = st.selectbox("End Hour", list(range(1, 13)), index=8)  # Default 8
+            end_hour = st.selectbox("End Hour", list(range(1, 13)), index=8)
         with en_m:
-            end_min = st.selectbox("End Minute", [f"{i:02d}" for i in range(60)], index=40)  # Default 40
+            end_min = st.selectbox("End Minute", [f"{i:02d}" for i in range(60)], index=40)
         with en_ap:
             end_ampm = st.selectbox("End AM/PM", ["AM", "PM"], index=0)
         
-        validity_str = f"{v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} to {v_end_date.strftime('%d/%m/%Y')} {end_hour}:{end_min} {end_ampm} (2hrs 30 30minutes)"
+        validity_str = f"{v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} to {v_end_date.strftime('%d/%m/%Y')} {end_hour}:{end_min} {end_ampm} (2hrs 30 minutes)"
 
         check_post = st.text_input("Check Post", "No Checkpost")
         vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
         crusher_unit = st.text_input("Crusher Unit", "-")
         destination = st.text_area("Destination", "Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, (KA) – 562130 93 Km")
-        copy_type = st.radio("Copy Type", ["Leaseholder Copy", "Destination Copy"])
+        
+        # Forced single copy type default so data changes apply universally to the template
+        copy_type = "Leaseholder Copy"
 
     submitted = st.form_submit_button("Generate A5 Word Document")
 
