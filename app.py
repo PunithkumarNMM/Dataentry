@@ -13,7 +13,7 @@ def check_password():
     """Returns `True` if the user enters the correct password."""
     def password_entered():
         # Change "admin123" to whatever password you want to set
-        if st.session_state["password"] == "admin123":
+        if st.session_state["password"] == "7505":
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store the password in state
         else:
