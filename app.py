@@ -110,7 +110,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(1.2))
+   inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
         "form_ap_no": form_ap_no,
