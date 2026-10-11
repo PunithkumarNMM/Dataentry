@@ -13,26 +13,22 @@ def check_password():
     """Returns `True` if the user enters the correct password."""
     def password_entered():
         # Change "admin123" to whatever password you want to set
-        if st.session_state["password"] == "7505":
+        if st.session_state["password"] == "admin123":
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store the password in state
         else:
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        # First time opening the app or not logged in yet
         st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
-        # Incorrect password entered
         st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
         st.error("😕 Incorrect password. Please try again.")
         return False
     else:
-        # Password correct
         return True
 
-# Stop execution of the rest of the app if password is not correct
 if not check_password():
     st.stop()
 # ==============================================================
@@ -118,7 +114,8 @@ with st.form("permit_form"):
 if submitted:
     doc = DocxTemplate("format.docx")
 
-  qr_data = (
+    # QR code data formatted with slash separators
+    qr_data = (
         f"Form AP No: {form_ap_no} / "
         f"MDP No: {mdp_no} / "
         f"Quantity: {quantity} / "
@@ -139,7 +136,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    # Compact QR code width to fit precisely inside your template box
+    # Compact sizing for precise fit inside the template box
     inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
