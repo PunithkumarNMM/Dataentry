@@ -140,7 +140,7 @@ if submitted:
     qr_io.seek(0)
 
     # Compact QR code width to fit precisely inside your template box
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
         "form_ap_no": form_ap_no,
