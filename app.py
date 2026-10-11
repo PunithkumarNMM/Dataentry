@@ -79,6 +79,7 @@ with st.form("permit_form"):
         check_post = st.text_input("Check Post", "No Checkpost")
         vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
         crusher_unit = st.text_input("Crusher Unit", "-")
+        mobile_no = st.text_input("Mobile No", "9876543210")  # Added Mobile No input field
         destination = st.text_area("Destination", "Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, (KA) – 562130 93 Km")
         
         copy_type = "Leaseholder Copy"
@@ -109,8 +110,8 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    # Corrected smaller size to prevent box overflow
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    # Compact QR code width to fit neatly inside the box
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
@@ -137,6 +138,7 @@ if submitted:
         "check_post": check_post,
         "vehicle_no": vehicle_no,
         "crusher_unit": crusher_unit,
+        "mobile_no": mobile_no,  # Added to template context mapping to {{mobile_no}}
         "destination": destination,
         "copy_type": copy_type,
         "qr_code": inline_qr
