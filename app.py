@@ -24,8 +24,6 @@ with st.form("permit_form"):
         lease_no = st.text_input("Lease No", "BLRNSWP54")
         barcode = st.text_input("Barcode", "MYZ117332769")
         lease_name = st.text_input("Lease Name", "Sobhamma S")
-        
-        # Separate fields for DSC No and GST No
         dsc_no = st.text_input("DSC No", "/")
         gst_no = st.text_input("GST No", "/")
         
@@ -46,6 +44,10 @@ with st.form("permit_form"):
         form_ap_purpose = select_with_other("Form AP Purpose", ["Karnataka", "Inter-State"], "Karnataka")
         mineral_grade = select_with_other("Mineral / Grade", ["Murram", "Building Stone", "M-Sand"], "Murram")
         
+        # New fields for Total Volume and Total Blocks based on your template table
+        total_volume = st.text_input("Total Volume", "0.00")
+        total_blocks = st.text_input("Total Block(s)", "0")
+
         total_amount_paid = st.text_area("Total Amount Paid", "3666.97(Royalty :3486.91, DMF: 180.06,APP: 0, AAPP: 900. 30, TCS: 36.01 ,)")
         buyer = st.text_input("Buyer", "EM Bricks PVT LTD")
         route = st.text_area("Route", "Sy no 60, 1st Cross Road, Shree Ganesha Temple, Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, 562130,93 KM")
@@ -124,6 +126,8 @@ if submitted:
         "mdp_type": mdp_type,
         "form_ap_purpose": form_ap_purpose,
         "mineral_grade": mineral_grade,
+        "total_volume": total_volume,
+        "total_blocks": total_blocks,
         "total_amount_paid": total_amount_paid,
         "buyer": buyer,
         "route": route,
