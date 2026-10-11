@@ -116,15 +116,15 @@ if submitted:
 
     # QR code data formatted with slash separators
     qr_data = (
-        f"Form AP No: {form_ap_no} / "
-        f"MDP No: {mdp_no} / "
-        f"Quantity: {quantity} / "
-        f"Date and Time: {v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} / "
-        f"Vehicle Number: {vehicle_no} / "
-        f"Buyer: {buyer} / "
-        f"Mineral and Grade: {mineral_grade} / "
-        f"Bar code: {barcode} / "
-        f"Destination: {destination}"
+        f" {form_ap_no} | "
+        f" {mdp_no} | "
+        f" {quantity} | "
+        f" {v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} | "
+        f" {vehicle_no} | "
+        f" {buyer} | "
+        f" {mineral_grade} | "
+        f" {barcode} | "
+        f" {destination} | "
     )
 
     qr = qrcode.QRCode(box_size=4, border=1)
