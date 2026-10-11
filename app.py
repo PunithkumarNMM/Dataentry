@@ -8,6 +8,35 @@ import datetime
 st.set_page_config(page_title="A5 Permit Generator", layout="wide")
 st.title("A5 Mineral Dispatch Permit Data Entry")
 
+# ==================== PASSWORD PROTECTION ====================
+def check_password():
+    """Returns `True` if the user enters the correct password."""
+    def password_entered():
+        # Change "admin123" to whatever password you want to set
+        if st.session_state["password"] == "admin123":
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store the password in state
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First time opening the app or not logged in yet
+        st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        # Incorrect password entered
+        st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
+        st.error("😕 Incorrect password. Please try again.")
+        return False
+    else:
+        # Password correct
+        return True
+
+# Stop execution of the rest of the app if password is not correct
+if not check_password():
+    st.stop()
+# ==============================================================
+
 def select_with_other(label, options, default_val):
     choice = st.selectbox(label, options + ["Others"])
     if choice == "Others":
@@ -79,7 +108,7 @@ with st.form("permit_form"):
         check_post = st.text_input("Check Post", "No Checkpost")
         vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
         crusher_unit = st.text_input("Crusher Unit", "-")
-        mobile_no = st.text_input("Mobile No", "9876543210")  # Added Mobile No input field
+        mobile_no = st.text_input("Mobile No", "9876543210")
         destination = st.text_area("Destination", "Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, (KA) – 562130 93 Km")
         
         copy_type = "Leaseholder Copy"
@@ -110,8 +139,8 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    # Compact QR code width to fit neatly inside the box
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    # Compact QR code width to fit precisely inside your template box
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
@@ -138,7 +167,7 @@ if submitted:
         "check_post": check_post,
         "vehicle_no": vehicle_no,
         "crusher_unit": crusher_unit,
-        "mobile_no": mobile_no,  # Added to template context mapping to {{mobile_no}}
+        "mobile_no": mobile_no,
         "destination": destination,
         "copy_type": copy_type,
         "qr_code": inline_qr
