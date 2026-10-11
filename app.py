@@ -25,8 +25,9 @@ with st.form("permit_form"):
         barcode = st.text_input("Barcode", "MYZ117332769")
         lease_name = st.text_input("Lease Name", "Sobhamma S")
         
-        # Fixed GST No input field added back
-        gst_no = st.text_input("DSC No / Name / GST No", "/")
+        # Separate fields for DSC No and GST No
+        dsc_no = st.text_input("DSC No", "/")
+        gst_no = st.text_input("GST No", "/")
         
         type_of_land = select_with_other("Type of Land", ["Revenue", "Patta Land", "Forest"], "Revenue")
         taluk_district = select_with_other("Taluk/District", ["Hoskote/Bangalore Rural", "Bangalore Urban", "Devanahalli"], "Hoskote/Bangalore Rural")
@@ -79,7 +80,6 @@ with st.form("permit_form"):
         crusher_unit = st.text_input("Crusher Unit", "-")
         destination = st.text_area("Destination", "Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, (KA) – 562130 93 Km")
         
-        # Forced single copy type default so data changes apply universally to the template
         copy_type = "Leaseholder Copy"
 
     submitted = st.form_submit_button("Generate A5 Word Document")
@@ -115,8 +115,8 @@ if submitted:
         "lease_no": lease_no,
         "barcode": barcode,
         "lease_name": lease_name,
+        "dsc_no": dsc_no,
         "gst_no": gst_no,
-        "dsc_no": gst_no,
         "type_of_land": type_of_land,
         "taluk_district": taluk_district,
         "loading_place": loading_place,
