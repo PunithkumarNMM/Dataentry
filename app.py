@@ -88,7 +88,6 @@ with st.form("permit_form"):
 if submitted:
     doc = DocxTemplate("format.docx")
 
-    # QR Code data formatted with your exact 9 custom fields in order
     qr_data = (
         f"1. Form AP No: {form_ap_no}\n"
         f"2. MDP No: {mdp_no}\n"
@@ -110,7 +109,8 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-   inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    # Corrected smaller size to prevent box overflow
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
         "form_ap_no": form_ap_no,
