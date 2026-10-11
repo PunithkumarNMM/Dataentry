@@ -110,7 +110,7 @@ if submitted:
     qr_io.seek(0)
 
     # Corrected smaller size to prevent box overflow
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
