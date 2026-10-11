@@ -44,7 +44,6 @@ with st.form("permit_form"):
         form_ap_purpose = select_with_other("Form AP Purpose", ["Karnataka", "Inter-State"], "Karnataka")
         mineral_grade = select_with_other("Mineral / Grade", ["Murram", "Building Stone", "M-Sand"], "Murram")
         
-        # New fields for Total Volume and Total Blocks based on your template table
         total_volume = st.text_input("Total Volume", "0.00")
         total_blocks = st.text_input("Total Block(s)", "0")
 
@@ -89,14 +88,17 @@ with st.form("permit_form"):
 if submitted:
     doc = DocxTemplate("format.docx")
 
+    # QR Code data formatted with your exact 9 custom fields in order
     qr_data = (
         f"1. Form AP No: {form_ap_no}\n"
-        f"2. Sr No: {sr_no}\n"
-        f"3. MDP No: {mdp_no}\n"
+        f"2. MDP No: {mdp_no}\n"
+        f"3. Quantity: {quantity}\n"
         f"4. Date and Time: {v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm}\n"
-        f"5. Lease No: {lease_no}\n"
-        f"6. Barcode: {barcode}\n"
-        f"7. Lease Name: {lease_name}"
+        f"5. Vehicle Number: {vehicle_no}\n"
+        f"6. Buyer: {buyer}\n"
+        f"7. Mineral and Grade: {mineral_grade}\n"
+        f"8. Bar code: {barcode}\n"
+        f"9. Destination: {destination}"
     )
 
     qr = qrcode.QRCode(box_size=4, border=1)
