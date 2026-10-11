@@ -118,16 +118,16 @@ with st.form("permit_form"):
 if submitted:
     doc = DocxTemplate("format.docx")
 
-    qr_data = (
-        f"1. Form AP No: {form_ap_no}\n"
-        f"2. MDP No: {mdp_no}\n"
-        f"3. Quantity: {quantity}\n"
-        f"4. Date and Time: {v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm}\n"
-        f"5. Vehicle Number: {vehicle_no}\n"
-        f"6. Buyer: {buyer}\n"
-        f"7. Mineral and Grade: {mineral_grade}\n"
-        f"8. Bar code: {barcode}\n"
-        f"9. Destination: {destination}"
+  qr_data = (
+        f"Form AP No: {form_ap_no} / "
+        f"MDP No: {mdp_no} / "
+        f"Quantity: {quantity} / "
+        f"Date and Time: {v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} / "
+        f"Vehicle Number: {vehicle_no} / "
+        f"Buyer: {buyer} / "
+        f"Mineral and Grade: {mineral_grade} / "
+        f"Bar code: {barcode} / "
+        f"Destination: {destination}"
     )
 
     qr = qrcode.QRCode(box_size=4, border=1)
