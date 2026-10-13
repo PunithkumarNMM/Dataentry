@@ -87,18 +87,29 @@ with st.form("permit_form"):
         with st_ap:
             start_ampm = st.selectbox("AM/PM", ["AM", "PM"], index=0)
 
-        validity_duration = st.selectbox(
+        # Generate 15-minute interval options programmatically up to 24 hours
+        duration_options = []
+        total_minutes_list = []
+        for minutes in range(15, 24 * 60 + 1, 15):
+            hrs = minutes // 60
+            mins = minutes % 60
+            if hrs > 0 and mins > 0:
+                label = f"{hrs}hrs {mins} minutes"
+            elif hrs > 0:
+                label = f"{hrs}hrs"
+            else:
+                label = f"{mins} minutes"
+            duration_options.append(label)
+            total_minutes_list.append(minutes)
+
+        selected_duration_label = st.selectbox(
             "Validity Duration", 
-            [
-                "2hrs 30 minutes", 
-                "3hrs", 
-                "4hrs", 
-                "6hrs", 
-                "12hrs", 
-                "24hrs"
-            ],
-            index=0
+            duration_options,
+            index=duration_options.index("2hrs 30 minutes") if "2hrs 30 minutes" in duration_options else 10
         )
+        
+        # Get exact total minutes corresponding to the selected label
+        selected_total_minutes = total_minutes_list[duration_options.index(selected_duration_label)]
 
         check_post = st.text_input("Check Post", "No Checkpost")
         vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
@@ -120,22 +131,8 @@ if submitted:
 
     start_dt = datetime.datetime.combine(v_start_date, datetime.time(h_24, int(start_min)))
 
-    # Parse duration and calculate end datetime automatically
-    if validity_duration == "2hrs 30 minutes":
-        delta = datetime.timedelta(hours=2, minutes=30)
-    elif validity_duration == "3hrs":
-        delta = datetime.timedelta(hours=3)
-    elif validity_duration == "4hrs":
-        delta = datetime.timedelta(hours=4)
-    elif validity_duration == "6hrs":
-        delta = datetime.timedelta(hours=6)
-    elif validity_duration == "12hrs":
-        delta = datetime.timedelta(hours=12)
-    elif validity_duration == "24hrs":
-        delta = datetime.timedelta(hours=24)
-    else:
-        delta = datetime.timedelta(hours=3)
-
+    # Calculate end datetime using the precise 15-minute increments
+    delta = datetime.timedelta(minutes=selected_total_minutes)
     end_dt = start_dt + delta
 
     start_date_str = v_start_date.strftime('%d/%m/%Y')
@@ -150,7 +147,7 @@ if submitted:
     end_ampm_str = end_dt.strftime('%p')
     end_time_str = f"{end_hour_12}:{end_min_str} {end_ampm_str}"
 
-    validity_str = f"{start_date_time} to {end_date_str} {end_time_str} ({validity_duration})"
+    validity_str = f"{start_date_time} to {end_date_str} {end_time_str} ({selected_duration_label})"
 
     doc = DocxTemplate("format.docx")
 
@@ -198,7 +195,7 @@ if submitted:
         "total_amount_paid": total_amount_paid,
         "buyer": buyer,
         "route": route,
-        "start_date_time": start_date_time,  # Mapped to {{start_date_time}} in the Word template
+        "start_date_time": start_date_time,
         "validity": validity_str,
         "check_post": check_post,
         "vehicle_no": vehicle_no,
