@@ -6,9 +6,8 @@ from io import BytesIO
 import datetime
 
 st.set_page_config(page_title="A5 Permit Generator", layout="wide")
-st.title("A5 Mineral Dispatch Permit Data Entry")
 
-# ==================== PASSWORD PROTECTION ====================
+# ==================== PASSWORD PROTECTION & LANDING ====================
 def check_password():
     """Returns `True` if the user enters the correct password."""
     def password_entered():
@@ -19,11 +18,27 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            try:
+                st.image("logo.png", use_container_width=True)
+            except Exception:
+                st.markdown("<h1 style='text-align: center;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center; color: #38bdf8;'>Crafted By Punith Kumar N M</h3>", unsafe_allow_html=True)
+            st.write("")
+            st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
-        st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
-        st.error("😕 Incorrect password. Please try again.")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            try:
+                st.image("logo.png", use_container_width=True)
+            except Exception:
+                st.markdown("<h1 style='text-align: center;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center; color: #38bdf8;'>Crafted By Punith Kumar N M</h3>", unsafe_allow_html=True)
+            st.write("")
+            st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
+            st.error("😕 Incorrect password. Please try again.")
         return False
     else:
         return True
@@ -31,6 +46,8 @@ def check_password():
 if not check_password():
     st.stop()
 # ==============================================================
+
+st.title("A5 Mineral Dispatch Permit Data Entry")
 
 def select_with_other(label, options, default_val):
     choice = st.selectbox(label, options + ["Others"])
@@ -108,7 +125,6 @@ with st.form("permit_form"):
             index=duration_options.index("2hrs 30 minutes") if "2hrs 30 minutes" in duration_options else 10
         )
         
-        # Get exact total minutes corresponding to the selected label
         selected_total_minutes = total_minutes_list[duration_options.index(selected_duration_label)]
 
         check_post = st.text_input("Check Post", "No Checkpost")
@@ -122,7 +138,6 @@ with st.form("permit_form"):
     submitted = st.form_submit_button("Generate A5 Word Document")
 
 if submitted:
-    # Convert start time to 24-hour format for calculation
     h_24 = start_hour
     if start_ampm == "PM" and start_hour != 12:
         h_24 += 12
@@ -131,7 +146,6 @@ if submitted:
 
     start_dt = datetime.datetime.combine(v_start_date, datetime.time(h_24, int(start_min)))
 
-    # Calculate end datetime using the precise 15-minute increments
     delta = datetime.timedelta(minutes=selected_total_minutes)
     end_dt = start_dt + delta
 
