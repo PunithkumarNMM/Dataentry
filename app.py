@@ -7,35 +7,50 @@ import datetime
 
 st.set_page_config(page_title="A5 Permit Generator - Trail & Error", layout="wide")
 
-# ==================== PROFESSIONAL UI & STYLING ====================
+# ==================== FULL-SCREEN & LABEL STYLING ====================
 st.markdown("""
     <style>
     .stApp {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         color: #f8fafc;
     }
-    .splash-container {
+    /* Make all form labels bright and legible against the dark background */
+    .stTextInput label, .stSelectbox label, .stDateInput label, .stTextArea label, .stNumberInput label {
+        color: #38bdf8 !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+    }
+    .fullscreen-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        z-index: 99999;
         padding: 2rem;
+        overflow-y: auto;
     }
     .brand-title {
-        font-size: 2.8rem;
+        font-size: 3.2rem;
         font-weight: 800;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         background: linear-gradient(90deg, #38bdf8, #818cf8);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
         margin-top: 1rem;
+        margin-bottom: 0.5rem;
     }
     .brand-subtitle {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         font-weight: 500;
         color: #94a3b8;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         text-align: center;
         margin-bottom: 2rem;
     }
@@ -49,9 +64,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==================== MULTI-STEP SESSION STATE ROUTING ====================
+# ==================== SESSION ROUTING ====================
 if "auth_step" not in st.session_state:
-    st.session_state["auth_step"] = "splash"
+    st.session_state["auth_step"] = "image_screen"
 
 if "operator_name" not in st.session_state:
     st.session_state["operator_name"] = ""
@@ -59,58 +74,60 @@ if "operator_name" not in st.session_state:
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
-# Screen 1: Splash Intro Screen
-if st.session_state["auth_step"] == "splash":
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<div class='splash-container'>", unsafe_allow_html=True)
-        try:
-            st.image("logo.png", use_container_width=True)
-        except Exception:
-            st.markdown("<h1 style='text-align: center; color: #38bdf8;'>T & E</h1>", unsafe_allow_html=True)
-            
-        st.markdown("<div class='brand-title'>TRAIL & ERROR</div>", unsafe_allow_html=True)
-        st.markdown("<div class='brand-subtitle'>Crafted By Punith Kumar N M</div>", unsafe_allow_html=True)
+# Screen 1: Full-Screen Image & Branding
+if st.session_state["auth_step"] == "image_screen":
+    st.markdown("<div class='fullscreen-splash'>", unsafe_allow_html=True)
+    
+    try:
+        st.image("logo.png", width=650)
+    except Exception:
+        st.markdown("<h1 style='color: #38bdf8; font-size: 4rem; text-align: center;'>T & E</h1>", unsafe_allow_html=True)
         
-        if st.button("🚀 Proceed to Login", use_container_width=True):
-            st.session_state["auth_step"] = "login"
+    st.markdown("<div class='brand-title'>TRAIL & ERROR</div>", unsafe_allow_html=True)
+    st.markdown("<div class='brand-subtitle'>Crafted By Punith Kumar N M</div>", unsafe_allow_html=True)
+    
+    col_btn1, col_btn2, col_btn3 = st.columns([2, 1.5, 2])
+    with col_btn2:
+        if st.button("🚀 Proceed to Secure Portal", use_container_width=True):
+            st.session_state["auth_step"] = "login_screen"
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+            
+    st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
-# Screen 2: Login & Operator Name Entry Screen
-elif st.session_state["auth_step"] == "login":
+# Screen 2: Password and Operator Name Entry
+elif st.session_state["auth_step"] == "login_screen":
     col1, col2, col3 = st.columns([1, 1.5, 1])
     with col2:
-        st.markdown("<h2 style='text-align: center; color: #38bdf8;'>🔒 Secure Portal Login</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #38bdf8;'>🔒 Authentication Required</h2>", unsafe_allow_html=True)
         st.write("")
         
         with st.form("login_form"):
-            operator_input = st.text_input("Your Name (Operator)")
-            password_input = st.text_input("Access Password", type="password")
-            submitted_login = st.form_submit_button("Authenticate", use_container_width=True)
+            operator_input = st.text_input("Enter Your Name")
+            password_input = st.text_input("Enter Password", type="password")
+            submitted_login = st.form_submit_button("Access Portal", use_container_width=True)
             
             if submitted_login:
                 if not operator_input.strip():
                     st.error("⚠️ Please enter your name.")
-                elif password_input == "7505":  # Change password here if needed
+                elif password_input == "admin123":
                     st.session_state["operator_name"] = operator_input.strip()
                     st.session_state["authenticated"] = True
-                    st.session_state["auth_step"] = "app"
+                    st.session_state["auth_step"] = "app_screen"
                     st.rerun()
                 else:
                     st.error("❌ Incorrect password. Please try again.")
                     
         if st.button("⬅️ Back to Home"):
-            st.session_state["auth_step"] = "splash"
+            st.session_state["auth_step"] = "image_screen"
             st.rerun()
     st.stop()
 
-# ==================== MAIN APP SCREEN (SCREEN 3) ====================
+# ==================== SCREEN 3: WELCOME & DATA ENTRY ====================
 st.markdown(f"""
     <div class='welcome-banner'>
         <h3 style='margin:0; color: #38bdf8;'>👋 Welcome, {st.session_state["operator_name"]}!</h3>
-        <p style='margin:0; color: #cbd5e1;'>System active. You can now generate A5 Mineral Dispatch Permits securely.</p>
+        <p style='margin:0; color: #cbd5e1;'>Portal unlocked. You can now generate A5 Mineral Dispatch Permits.</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -251,7 +268,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
