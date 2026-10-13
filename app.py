@@ -12,10 +12,9 @@ st.title("A5 Mineral Dispatch Permit Data Entry")
 def check_password():
     """Returns `True` if the user enters the correct password."""
     def password_entered():
-        # Change "admin123" to whatever password you want to set
-        if st.session_state["password"] == "7505":
+        if st.session_state["password"] == "admin123":
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password in state
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
@@ -76,7 +75,7 @@ with st.form("permit_form"):
         buyer = st.text_input("Buyer", "EM Bricks PVT LTD")
         route = st.text_area("Route", "Sy no 60, 1st Cross Road, Shree Ganesha Temple, Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, 562130,93 KM")
         
-        st.subheader("Validity Period & 12-Hour Time Selection")
+        st.subheader("Validity Period & Start Time")
         v_start_date = st.date_input("Start Date", datetime.date(2026, 10, 10), min_value=datetime.date(2000, 1, 1))
         
         st.markdown("**Start Time (12-hour)**")
@@ -88,18 +87,19 @@ with st.form("permit_form"):
         with st_ap:
             start_ampm = st.selectbox("AM/PM", ["AM", "PM"], index=0)
 
-        v_end_date = st.date_input("End Date", datetime.date(2026, 10, 10), min_value=datetime.date(2000, 1, 1))
-        
-        st.markdown("**End Time (12-hour)**")
-        en_h, en_m, en_ap = st.columns(3)
-        with en_h:
-            end_hour = st.selectbox("End Hour", list(range(1, 13)), index=8)
-        with en_m:
-            end_min = st.selectbox("End Minute", [f"{i:02d}" for i in range(60)], index=40)
-        with en_ap:
-            end_ampm = st.selectbox("End AM/PM", ["AM", "PM"], index=0)
-        
-        validity_str = f"{v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} to {v_end_date.strftime('%d/%m/%Y')} {end_hour}:{end_min} {end_ampm} (2hrs 30 minutes)"
+        # Duration selection option that auto-calculates end date/time
+        validity_duration = st.selectbox(
+            "Validity Duration", 
+            [
+                "2hrs 30 minutes", 
+                "3hrs", 
+                "4hrs", 
+                "6hrs", 
+                "12hrs", 
+                "24hrs"
+            ],
+            index=0
+        )
 
         check_post = st.text_input("Check Post", "No Checkpost")
         vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
@@ -112,19 +112,61 @@ with st.form("permit_form"):
     submitted = st.form_submit_button("Generate A5 Word Document")
 
 if submitted:
+    # Convert start time to 24-hour format for calculation
+    h_24 = start_hour
+    if start_ampm == "PM" and start_hour != 12:
+        h_24 += 12
+    elif start_ampm == "AM" and start_hour == 12:
+        h_24 = 0
+
+    start_dt = datetime.datetime.combine(v_start_date, datetime.time(h_24, int(start_min)))
+
+    # Parse duration and calculate end datetime automatically
+    if validity_duration == "2hrs 30 minutes":
+        delta = datetime.timedelta(hours=2, minutes=30)
+    elif validity_duration == "3hrs":
+        delta = datetime.timedelta(hours=3)
+    elif validity_duration == "4hrs":
+        delta = datetime.timedelta(hours=4)
+    elif validity_duration == "6hrs":
+        delta = datetime.timedelta(hours=6)
+    elif validity_duration == "12hrs":
+        delta = datetime.timedelta(hours=12)
+    elif validity_duration == "24hrs":
+        delta = datetime.timedelta(hours=24)
+    else:
+        delta = datetime.timedelta(hours=3)
+
+    end_dt = start_dt + delta
+
+    # Format start and end strings precisely
+    start_str = f"{start_dt.strftime('%d/%m/%Y %I:%M %p').lstrip('0').replace(' 0', ' ')}"
+    # Clean up formatting to match standard 12-hr display (e.g. 10/10/2026 2:30 AM)
+    start_date_str = v_start_date.strftime('%d/%m/%Y')
+    start_time_str = f"{start_hour}:{start_min} {start_ampm}"
+
+    end_date_str = end_dt.strftime('%d/%m/%Y')
+    end_hour_12 = end_dt.strftime('%I').lstrip('0')
+    if not end_hour_12: 
+        end_hour_12 = "12"
+    end_min_str = end_dt.strftime('%M')
+    end_ampm_str = end_dt.strftime('%p')
+    end_time_str = f"{end_hour_12}:{end_min_str} {end_ampm_str}"
+
+    validity_str = f"{start_date_str} {start_time_str} to {end_date_str} {end_time_str} ({validity_duration})"
+
     doc = DocxTemplate("format.docx")
 
-    # QR code data formatted with slash separators
     qr_data = (
-        f" {form_ap_no} | "
-        f" {mdp_no} | "
-        f" {quantity} | "
-        f" {v_start_date.strftime('%d/%m/%Y')} {start_hour}:{start_min} {start_ampm} | "
-        f" {vehicle_no} | "
-        f" {buyer} | "
-        f" {mineral_grade} | "
-        f" {barcode} | "
-        f" {destination} | "
+        f"Form AP No: {form_ap_no} / "
+        f"MDP No: {mdp_no} / "
+        f"Quantity: {quantity} / "
+        f"Date and Time: {validity_str} / "
+        f"Vehicle Number: {vehicle_no} / "
+        f"Buyer: {buyer} / "
+        f"Mineral and Grade: {mineral_grade} / "
+        f"Bar code: {barcode} / "
+        f"Destination: {destination}"
     )
 
     qr = qrcode.QRCode(box_size=4, border=1)
@@ -136,8 +178,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    # Compact sizing for precise fit inside the template box
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
