@@ -7,41 +7,49 @@ import datetime
 
 st.set_page_config(page_title="A5 Permit Generator", layout="wide")
 
-# ==================== PASSWORD PROTECTION & LANDING ====================
+# ==================== MULTI-STEP LOGIN & SPLASH SCREEN ====================
+if "auth_step" not in st.session_state:
+    st.session_state["auth_step"] = "splash"
+
 def check_password():
-    """Returns `True` if the user enters the correct password."""
     def password_entered():
-        if st.session_state["password"] == "7505":
+        if st.session_state["password"] == "admin123":
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
-    if "password_correct" not in st.session_state:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            try:
-                st.image("logo.png", use_container_width=True)
-            except Exception:
-                st.markdown("<h1 style='text-align: center;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
-            st.markdown("<h3 style='text-align: center; color: #38bdf8;'>Crafted By Punith Kumar N M</h3>", unsafe_allow_html=True)
-            st.write("")
-            st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
-        return False
-    elif not st.session_state["password_correct"]:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            try:
-                st.image("logo.png", use_container_width=True)
-            except Exception:
-                st.markdown("<h1 style='text-align: center;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
-            st.markdown("<h3 style='text-align: center; color: #38bdf8;'>Crafted By Punith Kumar N M</h3>", unsafe_allow_html=True)
-            st.write("")
-            st.text_input("🔒 Enter Password to Access App", type="password", on_change=password_entered, key="password")
-            st.error("😕 Incorrect password. Please try again.")
-        return False
-    else:
-        return True
+    if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
+        
+        # Step 1: Splash screen showing the logo and branding first
+        if st.session_state["auth_step"] == "splash":
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                try:
+                    st.image("logo.png", use_container_width=True)
+                except Exception:
+                    st.markdown("<h1 style='text-align: center;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
+                st.markdown("<h3 style='text-align: center; color: #38bdf8;'>Crafted By Punith Kumar N M</h3>", unsafe_allow_html=True)
+                st.write("")
+                if st.button("🚀 Proceed to Login", use_container_width=True):
+                    st.session_state["auth_step"] = "login"
+                    st.rerun()
+            st.stop()
+            
+        # Step 2: Password Entry Page
+        else:
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.markdown("<h2 style='text-align: center;'>🔒 Secure Access</h2>", unsafe_allow_html=True)
+                st.text_input("Enter Password to Access App", type="password", on_change=password_entered, key="password")
+                if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+                    st.error("😕 Incorrect password. Please try again.")
+                if st.button("⬅️ Back to Intro"):
+                    st.session_state["auth_step"] = "splash"
+                    st.rerun()
+            st.stop()
+            
+    return True
 
 if not check_password():
     st.stop()
@@ -104,7 +112,6 @@ with st.form("permit_form"):
         with st_ap:
             start_ampm = st.selectbox("AM/PM", ["AM", "PM"], index=0)
 
-        # Generate 15-minute interval options programmatically up to 24 hours
         duration_options = []
         total_minutes_list = []
         for minutes in range(15, 24 * 60 + 1, 15):
@@ -186,7 +193,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
