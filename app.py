@@ -12,7 +12,7 @@ st.title("A5 Mineral Dispatch Permit Data Entry")
 def check_password():
     """Returns `True` if the user enters the correct password."""
     def password_entered():
-        if st.session_state["password"] == "admin123":
+        if st.session_state["password"] == "7505":
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
@@ -175,7 +175,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
         "form_ap_no": form_ap_no,
