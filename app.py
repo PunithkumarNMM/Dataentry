@@ -14,8 +14,8 @@ st.markdown("""
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         color: #f8fafc;
     }
-    /* Make all form labels bright and legible against the dark background */
-    .stTextInput label, .stSelectbox label, .stDateInput label, .stTextArea label, .stNumberInput label {
+    /* Force all form labels and header texts to be bright and legible */
+    .stTextInput label, .stSelectbox label, .stDateInput label, .stTextArea label, .stNumberInput label, div[data-testid="stForm"] label {
         color: #38bdf8 !important;
         font-weight: 600 !important;
         font-size: 1rem !important;
@@ -77,11 +77,10 @@ if "authenticated" not in st.session_state:
 # Screen 1: Full-Screen Image & Branding
 if st.session_state["auth_step"] == "image_screen":
     st.markdown("<div class='fullscreen-splash'>", unsafe_allow_html=True)
-    
     try:
         st.image("logo.png", width=650)
     except Exception:
-        st.markdown("<h1 style='color: #38bdf8; font-size: 4rem; text-align: center;'>T & E</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #38bdf8;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
         
     st.markdown("<div class='brand-title'>TRAIL & ERROR</div>", unsafe_allow_html=True)
     st.markdown("<div class='brand-subtitle'>Crafted By Punith Kumar N M</div>", unsafe_allow_html=True)
@@ -110,7 +109,7 @@ elif st.session_state["auth_step"] == "login_screen":
             if submitted_login:
                 if not operator_input.strip():
                     st.error("⚠️ Please enter your name.")
-                elif password_input == "admin123":
+                elif password_input == "7505":  # Change password here if desired
                     st.session_state["operator_name"] = operator_input.strip()
                     st.session_state["authenticated"] = True
                     st.session_state["auth_step"] = "app_screen"
@@ -268,7 +267,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
         "form_ap_no": form_ap_no,
