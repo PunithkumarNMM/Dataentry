@@ -14,6 +14,12 @@ st.markdown("""
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         color: #f8fafc;
     }
+    /* Force ALL form input labels to be bright cyan-blue so they are clearly visible */
+    .stTextInput label, .stSelectbox label, .stDateInput label, .stTextArea label, .stNumberInput label, div[data-testid="stForm"] label {
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+    }
     .splash-container {
         display: flex;
         flex-direction: column;
@@ -93,7 +99,7 @@ elif st.session_state["auth_step"] == "login":
             if submitted_login:
                 if not operator_input.strip():
                     st.error("⚠️ Please enter your name.")
-                elif password_input == "7505":  # Change password here if needed
+                elif password_input == "admin123":  # Change password here if needed
                     st.session_state["operator_name"] = operator_input.strip()
                     st.session_state["authenticated"] = True
                     st.session_state["auth_step"] = "app"
@@ -251,7 +257,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
