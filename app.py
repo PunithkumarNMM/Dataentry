@@ -12,7 +12,7 @@ st.title("A5 Mineral Dispatch Permit Data Entry")
 def check_password():
     """Returns `True` if the user enters the correct password."""
     def password_entered():
-        if st.session_state["password"] == "7505":
+        if st.session_state["password"] == "admin123":
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
@@ -87,7 +87,6 @@ with st.form("permit_form"):
         with st_ap:
             start_ampm = st.selectbox("AM/PM", ["AM", "PM"], index=0)
 
-        # Duration selection option that auto-calculates end date/time
         validity_duration = st.selectbox(
             "Validity Duration", 
             [
@@ -139,11 +138,9 @@ if submitted:
 
     end_dt = start_dt + delta
 
-    # Format start and end strings precisely
-    start_str = f"{start_dt.strftime('%d/%m/%Y %I:%M %p').lstrip('0').replace(' 0', ' ')}"
-    # Clean up formatting to match standard 12-hr display (e.g. 10/10/2026 2:30 AM)
     start_date_str = v_start_date.strftime('%d/%m/%Y')
     start_time_str = f"{start_hour}:{start_min} {start_ampm}"
+    start_date_time = f"{start_date_str} {start_time_str}"
 
     end_date_str = end_dt.strftime('%d/%m/%Y')
     end_hour_12 = end_dt.strftime('%I').lstrip('0')
@@ -153,7 +150,7 @@ if submitted:
     end_ampm_str = end_dt.strftime('%p')
     end_time_str = f"{end_hour_12}:{end_min_str} {end_ampm_str}"
 
-    validity_str = f"{start_date_str} {start_time_str} to {end_date_str} {end_time_str} ({validity_duration})"
+    validity_str = f"{start_date_time} to {end_date_str} {end_time_str} ({validity_duration})"
 
     doc = DocxTemplate("format.docx")
 
@@ -178,7 +175,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
@@ -201,6 +198,7 @@ if submitted:
         "total_amount_paid": total_amount_paid,
         "buyer": buyer,
         "route": route,
+        "start_date_time": start_date_time,  # Mapped to {{start_date_time}} in the Word template
         "validity": validity_str,
         "check_post": check_post,
         "vehicle_no": vehicle_no,
