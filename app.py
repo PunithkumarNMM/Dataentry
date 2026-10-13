@@ -71,10 +71,12 @@ if "authenticated" not in st.session_state:
 # Screen 1: Full-Screen Image & Branding
 if st.session_state["auth_step"] == "image_screen":
     st.markdown("<div class='fullscreen-splash'>", unsafe_allow_html=True)
+    
+    # Safe image loader with error fallback so it never shows a blank screen
     try:
         st.image("logo.png", width=650)
     except Exception:
-        st.markdown("<h1 style='color: #38bdf8;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #38bdf8; font-size: 4rem; text-align: center;'>T & E</h1>", unsafe_allow_html=True)
         
     st.markdown("<div class='brand-title'>TRAIL & ERROR</div>", unsafe_allow_html=True)
     st.markdown("<div class='brand-subtitle'>Crafted By Punith Kumar N M</div>", unsafe_allow_html=True)
@@ -103,7 +105,7 @@ elif st.session_state["auth_step"] == "login_screen":
             if submitted_login:
                 if not operator_input.strip():
                     st.error("⚠️ Please enter your name.")
-                elif password_input == "7505":  # Change password here if desired
+                elif password_input == "admin123":  # Change password here if desired
                     st.session_state["operator_name"] = operator_input.strip()
                     st.session_state["authenticated"] = True
                     st.session_state["auth_step"] = "app_screen"
@@ -261,7 +263,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
 
     context = {
         "form_ap_no": form_ap_no,
