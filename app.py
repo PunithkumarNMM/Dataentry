@@ -5,55 +5,131 @@ from docx.shared import Inches
 from io import BytesIO
 import datetime
 
-st.set_page_config(page_title="A5 Permit Generator", layout="wide")
+st.set_page_config(page_title="A5 Permit Generator - Trail & Error", layout="wide")
 
-# ==================== MULTI-STEP LOGIN & SPLASH SCREEN ====================
+# ==================== FULL-SCREEN PROFESSIONAL STYLING ====================
+st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        color: #f8fafc;
+    }
+    /* Full-screen splash overlay */
+    .fullscreen-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        padding: 2rem;
+    }
+    .splash-logo {
+        max-width: 650px;
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        margin-bottom: 1.5rem;
+    }
+    .brand-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        letter-spacing: 3px;
+        background: linear-gradient(90deg, #38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    .brand-subtitle {
+        font-size: 1.4rem;
+        font-weight: 500;
+        color: #94a3b8;
+        letter-spacing: 1.5px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .welcome-banner {
+        padding: 1rem;
+        background: rgba(56, 189, 248, 0.1);
+        border-left: 4px solid #38bdf8;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ==================== MULTI-STEP SESSION STATE ROUTING ====================
 if "auth_step" not in st.session_state:
     st.session_state["auth_step"] = "splash"
 
-def check_password():
-    def password_entered():
-        if st.session_state["password"] == "admin123":
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]
-        else:
-            st.session_state["password_correct"] = False
+if "operator_name" not in st.session_state:
+    st.session_state["operator_name"] = ""
 
-    if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+# Screen 1: Full-Screen Immersive Splash Intro
+if st.session_state["auth_step"] == "splash":
+    st.markdown("<div class='fullscreen-splash'>", unsafe_allow_html=True)
+    try:
+        st.image("logo.png", width=600)
+    except Exception:
+        st.markdown("<h1 style='color: #38bdf8;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
         
-        # Step 1: Splash screen showing the logo and branding first
-        if st.session_state["auth_step"] == "splash":
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                try:
-                    st.image("logo.png", use_container_width=True)
-                except Exception:
-                    st.markdown("<h1 style='text-align: center;'>TRAIL & ERROR</h1>", unsafe_allow_html=True)
-                st.markdown("<h3 style='text-align: center; color: #38bdf8;'>Crafted By Punith Kumar N M</h3>", unsafe_allow_html=True)
-                st.write("")
-                if st.button("🚀 Proceed to Login", use_container_width=True):
-                    st.session_state["auth_step"] = "login"
-                    st.rerun()
-            st.stop()
+    st.markdown("<div class='brand-title'>TRAIL & ERROR</div>", unsafe_allow_html=True)
+    st.markdown("<div class='brand-subtitle'>Crafted By Punith Kumar N M</div>", unsafe_allow_html=True)
+    
+    col_btn1, col_btn2, col_btn3 = st.columns([2, 1.5, 2])
+    with col_btn2:
+        if st.button("🚀 Proceed to Login", use_container_width=True):
+            st.session_state["auth_step"] = "login"
+            st.rerun()
             
-        # Step 2: Password Entry Page
-        else:
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                st.markdown("<h2 style='text-align: center;'>🔒 Secure Access</h2>", unsafe_allow_html=True)
-                st.text_input("Enter Password to Access App", type="password", on_change=password_entered, key="password")
-                if "password_correct" in st.session_state and not st.session_state["password_correct"]:
-                    st.error("😕 Incorrect password. Please try again.")
-                if st.button("⬅️ Back to Intro"):
-                    st.session_state["auth_step"] = "splash"
-                    st.rerun()
-            st.stop()
-            
-    return True
-
-if not check_password():
+    st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
-# ==============================================================
+
+# Screen 2: Secure Login & Operator Name Entry Screen
+elif st.session_state["auth_step"] == "login":
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
+        st.markdown("<h2 style='text-align: center; color: #38bdf8;'>🔒 Secure Portal Login</h2>", unsafe_allow_html=True)
+        st.write("")
+        
+        with st.form("login_form"):
+            operator_input = st.text_input("Your Name (Operator)")
+            password_input = st.text_input("Access Password", type="password")
+            submitted_login = st.form_submit_button("Authenticate", use_container_width=True)
+            
+            if submitted_login:
+                if not operator_input.strip():
+                    st.error("⚠️ Please enter your name.")
+                elif password_input == "7505":  # Change password here if needed
+                    st.session_state["operator_name"] = operator_input.strip()
+                    st.session_state["authenticated"] = True
+                    st.session_state["auth_step"] = "app"
+                    st.rerun()
+                else:
+                    st.error("❌ Incorrect password. Please try again.")
+                    
+        if st.button("⬅️ Back to Intro"):
+            st.session_state["auth_step"] = "splash"
+            st.rerun()
+    st.stop()
+
+# ==================== MAIN APP SCREEN (SCREEN 3) ====================
+st.markdown(f"""
+    <div class='welcome-banner'>
+        <h3 style='margin:0; color: #38bdf8;'>👋 Welcome, {st.session_state["operator_name"]}!</h3>
+        <p style='margin:0; color: #cbd5e1;'>System active. You can now generate A5 Mineral Dispatch Permits securely.</p>
+    </div>
+""", unsafe_allow_html=True)
 
 st.title("A5 Mineral Dispatch Permit Data Entry")
 
@@ -152,7 +228,6 @@ if submitted:
         h_24 = 0
 
     start_dt = datetime.datetime.combine(v_start_date, datetime.time(h_24, int(start_min)))
-
     delta = datetime.timedelta(minutes=selected_total_minutes)
     end_dt = start_dt + delta
 
@@ -193,7 +268,7 @@ if submitted:
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
 
-    inline_qr = InlineImage(doc, qr_io, width=Inches(0.5))
+    inline_qr = InlineImage(doc, qr_io, width=Inches(0.75))
 
     context = {
         "form_ap_no": form_ap_no,
