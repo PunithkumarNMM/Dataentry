@@ -14,11 +14,16 @@ st.markdown("""
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         color: #f8fafc;
     }
-    /* Force ALL form input labels to be bright cyan-blue so they are clearly visible */
+    /* Labels in bright cyan-blue against dark background */
     .stTextInput label, .stSelectbox label, .stDateInput label, .stTextArea label, .stNumberInput label, div[data-testid="stForm"] label {
         color: #38bdf8 !important;
         font-weight: 700 !important;
         font-size: 1.05rem !important;
+    }
+    /* Black text inside all input boxes, text areas, and dropdowns */
+    input, textarea, div[data-baseweb="select"] > div {
+        color: #000000 !important;
+        background-color: #ffffff !important;
     }
     .splash-container {
         display: flex;
@@ -55,6 +60,28 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Pre-compute duration options once for faster UI rendering
+DURATION_OPTIONS = []
+TOTAL_MINUTES_LIST = []
+for _mins in range(15, 24 * 60 + 1, 15):
+    _hrs = _mins // 60
+    _rem = _mins % 60
+    if _hrs > 0 and _rem > 0:
+        _label = f"{_hrs}hrs {_rem} minutes"
+    elif _hrs > 0:
+        _label = f"{_hrs}hrs"
+    else:
+        _label = f"{_rem} minutes"
+    DURATION_OPTIONS.append(_label)
+    TOTAL_MINUTES_LIST.append(_mins)
+
+DEFAULT_DURATION_IDX = DURATION_OPTIONS.index("2hrs 30 minutes") if "2hrs 30 minutes" in DURATION_OPTIONS else 10
+
+@st.cache_resource
+def load_template_bytes(path: str) -> bytes:
+    with open(path, "rb") as f:
+        return f.read()
+
 # ==================== MULTI-STEP SESSION STATE ROUTING ====================
 if "auth_step" not in st.session_state:
     st.session_state["auth_step"] = "splash"
@@ -74,10 +101,10 @@ if st.session_state["auth_step"] == "splash":
             st.image("logo.png", use_container_width=True)
         except Exception:
             st.markdown("<h1 style='text-align: center; color: #38bdf8;'>T & E</h1>", unsafe_allow_html=True)
-            
+
         st.markdown("<div class='brand-title'>TRAIL & ERROR</div>", unsafe_allow_html=True)
         st.markdown("<div class='brand-subtitle'>Crafted By Punith Kumar N M</div>", unsafe_allow_html=True)
-        
+
         if st.button("🚀 Proceed to Login", use_container_width=True):
             st.session_state["auth_step"] = "login"
             st.rerun()
@@ -90,23 +117,23 @@ elif st.session_state["auth_step"] == "login":
     with col2:
         st.markdown("<h2 style='text-align: center; color: #38bdf8;'>🔒 Secure Portal Login</h2>", unsafe_allow_html=True)
         st.write("")
-        
+
         with st.form("login_form"):
             operator_input = st.text_input("Your Name (Operator)")
             password_input = st.text_input("Access Password", type="password")
             submitted_login = st.form_submit_button("Authenticate", use_container_width=True)
-            
+
             if submitted_login:
                 if not operator_input.strip():
                     st.error("⚠️ Please enter your name.")
-                elif password_input == "7505":  # Change password here if needed
+                elif password_input == "7505":
                     st.session_state["operator_name"] = operator_input.strip()
                     st.session_state["authenticated"] = True
                     st.session_state["auth_step"] = "app"
                     st.rerun()
                 else:
                     st.error("❌ Incorrect password. Please try again.")
-                    
+
         if st.button("⬅️ Back to Home"):
             st.session_state["auth_step"] = "splash"
             st.rerun()
@@ -140,11 +167,11 @@ with st.form("permit_form"):
         lease_name = st.text_input("Lease Name", "Sobhamma S")
         dsc_no = st.text_input("DSC No", "/")
         gst_no = st.text_input("GST No", "/")
-        
+
         type_of_land = select_with_other("Type of Land", ["Revenue", "Patta Land", "Forest"], "Revenue")
         taluk_district = select_with_other("Taluk/District", ["Hoskote/Bangalore Rural", "Bangalore Urban", "Devanahalli"], "Hoskote/Bangalore Rural")
         loading_place = select_with_other("Loading Place", ["Gullahalli"], "Gullahalli")
-        
+
         qty_num = st.number_input("Quantity Number", value=36.0, step=0.01)
         qty_unit = st.selectbox("Quantity Unit", ["Metric Ton (MT)", "Others"])
         if qty_unit == "Others":
@@ -157,17 +184,23 @@ with st.form("permit_form"):
         mdp_type = select_with_other("MDP Type", ["MT"], "MT")
         form_ap_purpose = select_with_other("Form AP Purpose", ["Karnataka", "Inter-State"], "Karnataka")
         mineral_grade = select_with_other("Mineral / Grade", ["Murram", "Building Stone", "M-Sand"], "Murram")
-        
+
         total_volume = st.text_input("Total Volume", "0.00")
         total_blocks = st.text_input("Total Block(s)", "0")
 
-        total_amount_paid = st.text_area("Total Amount Paid", "3666.97(Royalty :3486.91, DMF: 180.06,APP: 0, AAPP: 900. 30, TCS: 36.01 ,)")
+        total_amount_paid = st.text_area(
+            "Total Amount Paid",
+            "3666.97(Royalty :3486.91, DMF: 180.06,APP: 0, AAPP: 900. 30, TCS: 36.01 ,)"
+        )
         buyer = st.text_input("Buyer", "EM Bricks PVT LTD")
-        route = st.text_area("Route", "Sy no 60, 1st Cross Road, Shree Ganesha Temple, Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, 562130,93 KM")
-        
+        route = st.text_area(
+            "Route",
+            "Sy no 60, 1st Cross Road, Shree Ganesha Temple, Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, 562130, 93 KM"
+        )
+
         st.subheader("Validity Period & Start Time")
         v_start_date = st.date_input("Start Date", datetime.date(2026, 10, 10), min_value=datetime.date(2000, 1, 1))
-        
+
         st.markdown("**Start Time (12-hour)**")
         st_h, st_m, st_ap = st.columns(3)
         with st_h:
@@ -177,34 +210,19 @@ with st.form("permit_form"):
         with st_ap:
             start_ampm = st.selectbox("AM/PM", ["AM", "PM"], index=0)
 
-        duration_options = []
-        total_minutes_list = []
-        for minutes in range(15, 24 * 60 + 1, 15):
-            hrs = minutes // 60
-            mins = minutes % 60
-            if hrs > 0 and mins > 0:
-                label = f"{hrs}hrs {mins} minutes"
-            elif hrs > 0:
-                label = f"{hrs}hrs"
-            else:
-                label = f"{mins} minutes"
-            duration_options.append(label)
-            total_minutes_list.append(minutes)
-
         selected_duration_label = st.selectbox(
-            "Validity Duration", 
-            duration_options,
-            index=duration_options.index("2hrs 30 minutes") if "2hrs 30 minutes" in duration_options else 10
+            "Validity Duration",
+            DURATION_OPTIONS,
+            index=DEFAULT_DURATION_IDX
         )
-        
-        selected_total_minutes = total_minutes_list[duration_options.index(selected_duration_label)]
+        selected_total_minutes = TOTAL_MINUTES_LIST[DURATION_OPTIONS.index(selected_duration_label)]
 
         check_post = st.text_input("Check Post", "No Checkpost")
         vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
         crusher_unit = st.text_input("Crusher Unit", "-")
         mobile_no = st.text_input("Mobile No", "9876543210")
         destination = st.text_area("Destination", "Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, (KA) – 562130 93 Km")
-        
+
         copy_type = "Leaseholder Copy"
 
     submitted = st.form_submit_button("Generate A5 Word Document")
@@ -217,24 +235,22 @@ if submitted:
         h_24 = 0
 
     start_dt = datetime.datetime.combine(v_start_date, datetime.time(h_24, int(start_min)))
-    delta = datetime.timedelta(minutes=selected_total_minutes)
-    end_dt = start_dt + delta
+    end_dt = start_dt + datetime.timedelta(minutes=selected_total_minutes)
 
     start_date_str = v_start_date.strftime('%d/%m/%Y')
     start_time_str = f"{start_hour}:{start_min} {start_ampm}"
     start_date_time = f"{start_date_str} {start_time_str}"
 
     end_date_str = end_dt.strftime('%d/%m/%Y')
-    end_hour_12 = end_dt.strftime('%I').lstrip('0')
-    if not end_hour_12: 
-        end_hour_12 = "12"
+    end_hour_12 = end_dt.strftime('%I').lstrip('0') or "12"
     end_min_str = end_dt.strftime('%M')
     end_ampm_str = end_dt.strftime('%p')
     end_time_str = f"{end_hour_12}:{end_min_str} {end_ampm_str}"
 
     validity_str = f"{start_date_time} to {end_date_str} {end_time_str} ({selected_duration_label})"
 
-    doc = DocxTemplate("format.docx")
+    template_bytes = BytesIO(load_template_bytes("format.docx"))
+    doc = DocxTemplate(template_bytes)
 
     qr_data = (
         f"Form AP No: {form_ap_no} / "
@@ -252,7 +268,7 @@ if submitted:
     qr.add_data(qr_data)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="black", back_color="white")
-    
+
     qr_io = BytesIO()
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
@@ -279,7 +295,7 @@ if submitted:
         "total_blocks": total_blocks,
         "total_amount_paid": total_amount_paid,
         "buyer": buyer,
-        "route": route,
+        "route": route.strip(),
         "start_date_time": start_date_time,
         "validity": validity_str,
         "check_post": check_post,
