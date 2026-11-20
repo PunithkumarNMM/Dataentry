@@ -73,15 +73,16 @@ VOLUME_NUMBERS = [str(n) for n in range(30, 46)]
 RAW_VEHICLES = [
     "KA41A9477",
     "KA01AQ3006",
-    "ka07B6522",
-    "Ka51B7288",
-    "Ka40a3959",
+    "KA07B6522",
+    "KA51B7288",
+    "KA40A3959",
     "KA53AA8490",
     "KA53AB5004",
-    "Ka53aa5499",
+    "KA53AA5499",
     "KA53AD1333",
     "KA53AD1666",
-    "Ka53aa8199",
+    "KA53AA8199",
+    "KA53B4375",
 ]
 
 VEHICLE_OPTIONS = [f"{v.strip().upper()} / Tipper" for v in RAW_VEHICLES]
