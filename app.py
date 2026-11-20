@@ -62,27 +62,29 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==================== BARCODE SERIES, VOLUME & VEHICLE OPTIONS ====================
+# ==================== BARCODE SERIES, SR NO SERIES, VOLUME & VEHICLE OPTIONS ====================
 SERIES_PREFIX = "SIK"
 SERIES_START = 62594001
 SERIES_END = 62594100
 USED_BARCODES_FILE = "used_barcodes.json"
+
+SR_NO_START = 101
+USED_SR_NO_FILE = "used_sr_nos.json"
 
 VOLUME_NUMBERS = [str(n) for n in range(30, 46)]
 
 RAW_VEHICLES = [
     "KA41A9477",
     "KA01AQ3006",
-    "KA07B6522",
-    "KA51B7288",
-    "KA40A3959",
+    "ka07B6522",
+    "Ka51B7288",
+    "Ka40a3959",
     "KA53AA8490",
     "KA53AB5004",
-    "KA53AA5499",
+    "Ka53aa5499",
     "KA53AD1333",
     "KA53AD1666",
-    "KA53AA8199",
-    "KA53B4375",
+    "Ka53aa8199",
 ]
 
 VEHICLE_OPTIONS = [f"{v.strip().upper()} / Tipper" for v in RAW_VEHICLES]
@@ -100,29 +102,35 @@ def generate_series_list():
 
 BARCODE_SERIES = generate_series_list()
 
-def load_used_barcodes():
+def load_json_set(filepath: str, session_key: str) -> set:
     used = set()
-    if os.path.exists(USED_BARCODES_FILE):
+    if os.path.exists(filepath):
         try:
-            with open(USED_BARCODES_FILE, "r", encoding="utf-8") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, list):
-                    used.update(data)
+                    used.update(str(x) for x in data)
         except Exception:
             pass
-    if "used_barcodes" in st.session_state:
-        used.update(st.session_state["used_barcodes"])
+    if session_key in st.session_state:
+        used.update(str(x) for x in st.session_state[session_key])
     return used
 
-def save_used_barcode(code: str):
-    used = load_used_barcodes()
-    used.add(code)
-    st.session_state["used_barcodes"] = sorted(used)
+def save_to_json_set(filepath: str, session_key: str, item: str):
+    used = load_json_set(filepath, session_key)
+    used.add(str(item))
+    st.session_state[session_key] = sorted(used)
     try:
-        with open(USED_BARCODES_FILE, "w", encoding="utf-8") as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(sorted(used), f, indent=2)
     except Exception:
         pass
+
+def load_used_barcodes():
+    return load_json_set(USED_BARCODES_FILE, "used_barcodes")
+
+def save_used_barcode(code: str):
+    save_to_json_set(USED_BARCODES_FILE, "used_barcodes", code)
 
 def get_next_unused_barcode():
     used = load_used_barcodes()
@@ -131,8 +139,30 @@ def get_next_unused_barcode():
             return code
     return None
 
+def load_used_sr_nos() -> set:
+    used_ints = set()
+    for val in load_json_set(USED_SR_NO_FILE, "used_sr_nos"):
+        try:
+            used_ints.add(int(val))
+        except ValueError:
+            pass
+    return used_ints
+
+def save_used_sr_no(sr_val: str):
+    save_to_json_set(USED_SR_NO_FILE, "used_sr_nos", str(sr_val))
+
+def get_next_unused_sr_no() -> str:
+    used_ints = load_used_sr_nos()
+    candidate = SR_NO_START
+    while candidate in used_ints:
+        candidate += 1
+    return str(candidate)
+
 if "used_barcodes" not in st.session_state:
     st.session_state["used_barcodes"] = sorted(load_used_barcodes())
+
+if "used_sr_nos" not in st.session_state:
+    st.session_state["used_sr_nos"] = sorted(str(x) for x in load_used_sr_nos())
 
 # Pre-compute duration options once for faster UI rendering
 DURATION_OPTIONS = []
@@ -229,17 +259,17 @@ def select_with_other(label, options, default_val):
         return st.text_input(f"Custom {label}", default_val)
     return choice
 
-# Barcode controls outside form so switching Auto Series / Custom Text updates smoothly
+# Barcode & Sr No controls outside form so mode switches update smoothly
 next_series_code = get_next_unused_barcode()
 used_count = len([c for c in BARCODE_SERIES if c in load_used_barcodes()])
+next_sr_no = get_next_unused_sr_no()
 
-b_col1, b_col2 = st.columns([1, 2])
-with b_col1:
+top_c1, top_c2 = st.columns(2)
+with top_c1:
     barcode_mode = st.selectbox(
         "Barcode Source",
         ["Series (SIK62594001 - SIK62594100)", "Custom Text"]
     )
-with b_col2:
     if barcode_mode == "Custom Text":
         manual_barcode = st.text_input("Custom Barcode Text", "MYZ117332769")
         active_barcode = manual_barcode.strip()
@@ -253,12 +283,26 @@ with b_col2:
             active_barcode = ""
             st.warning("All barcodes from SIK62594001 to SIK62594100 have been used!")
 
+with top_c2:
+    sr_no_mode = st.selectbox(
+        "Sr No Source",
+        ["Auto Series (101 to Infinity)", "Custom Text"]
+    )
+    if sr_no_mode == "Custom Text":
+        manual_sr_no = st.text_input("Custom Sr No", "0003069")
+        active_sr_no = manual_sr_no.strip()
+        is_series_sr_no = False
+    else:
+        is_series_sr_no = True
+        active_sr_no = next_sr_no
+        st.info(f"Next Sr No in Series: **{active_sr_no}**")
+
 with st.form("permit_form"):
     col1, col2 = st.columns(2)
 
     with col1:
         form_ap_no = st.text_input("Form AP No", "BLRNSWP54230069")
-        sr_no = st.text_input("Sr No", "0003069")
+        sr_no = active_sr_no
         mdp_no = st.text_input("MDP No", "BLRNSWP5423000069")
         lease_no = st.text_input("Lease No", "BLRNSWP54")
         barcode = active_barcode
@@ -349,6 +393,9 @@ if submitted:
             st.stop()
         barcode = latest_unused
 
+    if is_series_sr_no:
+        sr_no = get_next_unused_sr_no()
+
     h_24 = start_hour
     if start_ampm == "PM" and start_hour != 12:
         h_24 += 12
@@ -435,22 +482,31 @@ if submitted:
     output_io.seek(0)
 
     st.session_state["last_doc_bytes"] = output_io.getvalue()
-    st.session_state["last_doc_name"] = f"Permit_{mdp_no}_{barcode}.docx"
+    st.session_state["last_doc_name"] = f"Permit_{sr_no}_{mdp_no}_{barcode}.docx"
     st.session_state["last_barcode_used"] = barcode
     st.session_state["last_was_series"] = is_series_barcode
+    st.session_state["last_sr_no_used"] = sr_no
+    st.session_state["last_sr_no_was_series"] = is_series_sr_no
 
 if "last_doc_bytes" in st.session_state:
-    st.success(f"Document ready with Barcode: **{st.session_state.get('last_barcode_used', '')}**")
+    st.success(
+        f"Document ready — **Sr No:** `{st.session_state.get('last_sr_no_used', '')}` | "
+        f"**Barcode:** `{st.session_state.get('last_barcode_used', '')}`"
+    )
 
-    def mark_barcode_used_on_download():
+    def mark_items_used_on_download():
         used_code = st.session_state.get("last_barcode_used")
         if st.session_state.get("last_was_series") and used_code:
             save_used_barcode(used_code)
+
+        used_sr = st.session_state.get("last_sr_no_used")
+        if st.session_state.get("last_sr_no_was_series") and used_sr:
+            save_used_sr_no(used_sr)
 
     st.download_button(
         label="Download A5 Word Document",
         data=st.session_state["last_doc_bytes"],
         file_name=st.session_state["last_doc_name"],
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        on_click=mark_barcode_used_on_download
+        on_click=mark_items_used_on_download
     )
