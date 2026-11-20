@@ -62,7 +62,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==================== BARCODE SERIES, SR NO SERIES, VOLUME & VEHICLE OPTIONS ====================
+# ==================== BARCODE SERIES, SR NO SERIES, VOLUME, VEHICLE & PURPOSE OPTIONS ====================
 SERIES_PREFIX = "SIK"
 SERIES_START = 62594001
 SERIES_END = 62594100
@@ -72,6 +72,48 @@ SR_NO_START = 101
 USED_SR_NO_FILE = "used_sr_nos.json"
 
 VOLUME_NUMBERS = [str(n) for n in range(30, 46)]
+
+GST_OPTIONS = ["29AAHCE2952R1ZV", "/"]
+
+INDIAN_STATES_AND_UTS = [
+    "Karnataka",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Lakshadweep",
+    "Puducherry",
+    "Inter-State",
+]
 
 RAW_VEHICLES = [
     "KA41A9477",
@@ -308,7 +350,12 @@ with st.form("permit_form"):
         barcode = active_barcode
         lease_name = st.text_input("Lease Name", "Sobhamma S")
         dsc_no = st.text_input("DSC No", "/")
-        gst_no = st.text_input("GST No", "/")
+
+        gst_choice = st.selectbox("GST No", GST_OPTIONS + ["Custom Text"], index=0)
+        if gst_choice == "Custom Text":
+            gst_no = st.text_input("Custom GST No", "29AAHCE2952R1ZV").strip().upper()
+        else:
+            gst_no = gst_choice
 
         type_of_land = select_with_other("Type of Land", ["Revenue", "Patta Land", "Forest"], "Revenue")
         taluk_district = select_with_other("Taluk/District", ["Hoskote/Bangalore Rural", "Bangalore Urban", "Devanahalli"], "Hoskote/Bangalore Rural")
@@ -324,7 +371,13 @@ with st.form("permit_form"):
 
     with col2:
         mdp_type = select_with_other("MDP Type", ["MT"], "MT")
-        form_ap_purpose = select_with_other("Form AP Purpose", ["Karnataka", "Inter-State"], "Karnataka")
+
+        purpose_choice = st.selectbox("Form AP Purpose", INDIAN_STATES_AND_UTS + ["Custom Text"], index=0)
+        if purpose_choice == "Custom Text":
+            form_ap_purpose = st.text_input("Custom Form AP Purpose", "Karnataka").strip()
+        else:
+            form_ap_purpose = purpose_choice
+
         mineral_grade = select_with_other("Mineral / Grade", ["Murram", "Building Stone", "M-Sand"], "Murram")
 
         volume_choice = st.selectbox("Total Volume", VOLUME_NUMBERS + ["Custom Text"], index=0)
