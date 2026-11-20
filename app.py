@@ -62,13 +62,37 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==================== BARCODE SERIES & VOLUME OPTIONS ====================
+# ==================== BARCODE SERIES, VOLUME & VEHICLE OPTIONS ====================
 SERIES_PREFIX = "SIK"
 SERIES_START = 62594001
 SERIES_END = 62594100
 USED_BARCODES_FILE = "used_barcodes.json"
 
 VOLUME_NUMBERS = [str(n) for n in range(30, 46)]
+
+RAW_VEHICLES = [
+    "KA41A9477",
+    "KA01AQ3006",
+    "ka07B6522",
+    "Ka51B7288",
+    "Ka40a3959",
+    "KA53AA8490",
+    "KA53AB5004",
+    "Ka53aa5499",
+    "KA53AD1333",
+    "KA53AD1666",
+    "Ka53aa8199",
+]
+
+VEHICLE_OPTIONS = [f"{v.strip().upper()} / Tipper" for v in RAW_VEHICLES]
+
+def format_vehicle_value(raw_val: str) -> str:
+    cleaned = raw_val.strip().upper()
+    if not cleaned:
+        return " / Tipper"
+    if "/ TIPPER" in cleaned:
+        return cleaned.replace("/ TIPPER", "/ Tipper")
+    return f"{cleaned} / Tipper"
 
 def generate_series_list():
     return [f"{SERIES_PREFIX}{num}" for num in range(SERIES_START, SERIES_END + 1)]
@@ -296,7 +320,14 @@ with st.form("permit_form"):
         selected_total_minutes = TOTAL_MINUTES_LIST[DURATION_OPTIONS.index(selected_duration_label)]
 
         check_post = st.text_input("Check Post", "No Checkpost")
-        vehicle_no = st.text_input("Vehicle No", "KA53B4375 / Tipper")
+
+        vehicle_choice = st.selectbox("Vehicle No", VEHICLE_OPTIONS + ["Custom Text"], index=0)
+        if vehicle_choice == "Custom Text":
+            custom_vehicle_raw = st.text_input("Custom Vehicle No", "KA53B4375")
+            vehicle_no = format_vehicle_value(custom_vehicle_raw)
+        else:
+            vehicle_no = vehicle_choice
+
         crusher_unit = st.text_input("Crusher Unit", "-")
         mobile_no = st.text_input("Mobile No", "9876543210")
         destination = st.text_area("Destination", "Hunnigere, Bengaluru, Bengaluru Urban, Karnataka, (KA) – 562130 93 Km")
