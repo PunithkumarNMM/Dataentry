@@ -4,6 +4,8 @@ from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
 from io import BytesIO
 import datetime
+import json
+import os
 
 st.set_page_config(page_title="A5 Permit Generator - Trail & Error", layout="wide")
 
@@ -59,6 +61,53 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# ==================== BARCODE SERIES & VOLUME OPTIONS ====================
+SERIES_PREFIX = "SIK"
+SERIES_START = 62594001
+SERIES_END = 62594100
+USED_BARCODES_FILE = "used_barcodes.json"
+
+VOLUME_NUMBERS = [str(n) for n in range(30, 46)]
+
+def generate_series_list():
+    return [f"{SERIES_PREFIX}{num}" for num in range(SERIES_START, SERIES_END + 1)]
+
+BARCODE_SERIES = generate_series_list()
+
+def load_used_barcodes():
+    used = set()
+    if os.path.exists(USED_BARCODES_FILE):
+        try:
+            with open(USED_BARCODES_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    used.update(data)
+        except Exception:
+            pass
+    if "used_barcodes" in st.session_state:
+        used.update(st.session_state["used_barcodes"])
+    return used
+
+def save_used_barcode(code: str):
+    used = load_used_barcodes()
+    used.add(code)
+    st.session_state["used_barcodes"] = sorted(used)
+    try:
+        with open(USED_BARCODES_FILE, "w", encoding="utf-8") as f:
+            json.dump(sorted(used), f, indent=2)
+    except Exception:
+        pass
+
+def get_next_unused_barcode():
+    used = load_used_barcodes()
+    for code in BARCODE_SERIES:
+        if code not in used:
+            return code
+    return None
+
+if "used_barcodes" not in st.session_state:
+    st.session_state["used_barcodes"] = sorted(load_used_barcodes())
 
 # Pre-compute duration options once for faster UI rendering
 DURATION_OPTIONS = []
@@ -155,6 +204,30 @@ def select_with_other(label, options, default_val):
         return st.text_input(f"Custom {label}", default_val)
     return choice
 
+# Barcode controls outside form so switching Auto Series / Custom Text updates smoothly
+next_series_code = get_next_unused_barcode()
+used_count = len([c for c in BARCODE_SERIES if c in load_used_barcodes()])
+
+b_col1, b_col2 = st.columns([1, 2])
+with b_col1:
+    barcode_mode = st.selectbox(
+        "Barcode Source",
+        ["Series (SIK62594001 - SIK62594100)", "Custom Text"]
+    )
+with b_col2:
+    if barcode_mode == "Custom Text":
+        manual_barcode = st.text_input("Custom Barcode Text", "MYZ117332769")
+        active_barcode = manual_barcode.strip()
+        is_series_barcode = False
+    else:
+        is_series_barcode = True
+        if next_series_code:
+            active_barcode = next_series_code
+            st.info(f"Next Barcode in Series: **{active_barcode}** ({used_count}/{len(BARCODE_SERIES)} used)")
+        else:
+            active_barcode = ""
+            st.warning("All barcodes from SIK62594001 to SIK62594100 have been used!")
+
 with st.form("permit_form"):
     col1, col2 = st.columns(2)
 
@@ -163,7 +236,7 @@ with st.form("permit_form"):
         sr_no = st.text_input("Sr No", "0003069")
         mdp_no = st.text_input("MDP No", "BLRNSWP5423000069")
         lease_no = st.text_input("Lease No", "BLRNSWP54")
-        barcode = st.text_input("Barcode", "MYZ117332769")
+        barcode = active_barcode
         lease_name = st.text_input("Lease Name", "Sobhamma S")
         dsc_no = st.text_input("DSC No", "/")
         gst_no = st.text_input("GST No", "/")
@@ -185,7 +258,12 @@ with st.form("permit_form"):
         form_ap_purpose = select_with_other("Form AP Purpose", ["Karnataka", "Inter-State"], "Karnataka")
         mineral_grade = select_with_other("Mineral / Grade", ["Murram", "Building Stone", "M-Sand"], "Murram")
 
-        total_volume = st.text_input("Total Volume", "0.00")
+        volume_choice = st.selectbox("Total Volume", VOLUME_NUMBERS + ["Custom Text"], index=0)
+        if volume_choice == "Custom Text":
+            total_volume = st.text_input("Custom Total Volume Text", "0.00")
+        else:
+            total_volume = volume_choice
+
         total_blocks = st.text_input("Total Block(s)", "0")
 
         total_amount_paid = st.text_area(
@@ -228,6 +306,17 @@ with st.form("permit_form"):
     submitted = st.form_submit_button("Generate A5 Word Document")
 
 if submitted:
+    if is_series_barcode and not barcode:
+        st.error("No unused barcodes remaining in the series SIK62594001 to SIK62594100.")
+        st.stop()
+
+    if is_series_barcode:
+        latest_unused = get_next_unused_barcode()
+        if not latest_unused:
+            st.error("No unused barcodes remaining in the series SIK62594001 to SIK62594100.")
+            st.stop()
+        barcode = latest_unused
+
     h_24 = start_hour
     if start_ampm == "PM" and start_hour != 12:
         h_24 += 12
@@ -291,7 +380,7 @@ if submitted:
         "mdp_type": mdp_type,
         "form_ap_purpose": form_ap_purpose,
         "mineral_grade": mineral_grade,
-        "total_volume": total_volume,
+        "total_volume": total_volume.strip(),
         "total_blocks": total_blocks,
         "total_amount_paid": total_amount_paid,
         "buyer": buyer,
@@ -313,10 +402,23 @@ if submitted:
     doc.save(output_io)
     output_io.seek(0)
 
-    st.success("Document created successfully!")
+    st.session_state["last_doc_bytes"] = output_io.getvalue()
+    st.session_state["last_doc_name"] = f"Permit_{mdp_no}_{barcode}.docx"
+    st.session_state["last_barcode_used"] = barcode
+    st.session_state["last_was_series"] = is_series_barcode
+
+if "last_doc_bytes" in st.session_state:
+    st.success(f"Document ready with Barcode: **{st.session_state.get('last_barcode_used', '')}**")
+
+    def mark_barcode_used_on_download():
+        used_code = st.session_state.get("last_barcode_used")
+        if st.session_state.get("last_was_series") and used_code:
+            save_used_barcode(used_code)
+
     st.download_button(
         label="Download A5 Word Document",
-        data=output_io,
-        file_name=f"Permit_{mdp_no}.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        data=st.session_state["last_doc_bytes"],
+        file_name=st.session_state["last_doc_name"],
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        on_click=mark_barcode_used_on_download
     )
